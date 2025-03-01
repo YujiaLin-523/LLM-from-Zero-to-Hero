@@ -46,7 +46,7 @@ class DecoderLayer(nn.Module):
 
         # output: (batch_size, head_num, seq_len, head_dim) -> (batch_size, seq_len, hidden_dim)
         output = attention_weights @ V
-        batch_size, seq_len, _, _ = output.shape
+        batch_size, _, seq_len, _ = output.shape
         output = output.transpose(1, 2).contiguous().view(batch_size, seq_len, self.hidden_dim)
         output = self.output_projection(output)
 
@@ -83,7 +83,10 @@ class DecoderLayer(nn.Module):
     
 
 # 测试部分
-x = torch.randn(3, 4, 128)
+HIDDE_DIM = 128
+HEAD_NUM = 8
+
+x = torch.randn(3, 4, HIDDE_DIM)
 mask = torch.tensor(
     [
         [1, 1, 1, 0],
@@ -93,8 +96,8 @@ mask = torch.tensor(
 )
 
 # mask: (batch_size, seq_len) -> (batch_size, head_num, seq_len, seq_len)
-mask = mask.unsqueeze(1).unsqueeze(2).repeat(1, 4, 1, 1)
+mask = mask.unsqueeze(1).unsqueeze(2).repeat(1, HEAD_NUM, 1, 1)
 
-model = DecoderLayer(hidden_dim=128, head_num=8)
+model = DecoderLayer(hidden_dim=HIDDE_DIM, head_num=HEAD_NUM)
 output = model(x, mask)
 print("Output tensor shape: ", output.shape)
