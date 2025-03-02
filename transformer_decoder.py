@@ -82,11 +82,31 @@ class DecoderLayer(nn.Module):
         return x
     
 
+class Decoder(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.layers = nn.ModuleList(
+            [
+                DecoderLayer(hidden_dim=64, head_num=8) for _ in range(5)
+            ]
+        )
+
+        self.embedding = nn.Embedding(num_embeddings=12, embedding_dim=64)
+        self.output_projection = nn.Linear(64, 12)
+
+    def forward(self, x: torch.Tensor, mask: torch.Tensor = None) -> torch.Tensor:
+        x = self.embedding(x)
+        for layer in self.layers:
+            x = layer(x, mask)
+        x = self.output_projection(x)
+
+        return x
+
 # 测试部分
 HIDDE_DIM = 128
 HEAD_NUM = 8
 
-x = torch.randn(3, 4, HIDDE_DIM)
+x = torch.randint(0, 12, (3, 4))
 mask = torch.tensor(
     [
         [1, 1, 1, 0],
@@ -98,6 +118,6 @@ mask = torch.tensor(
 # mask: (batch_size, seq_len) -> (batch_size, head_num, seq_len, seq_len)
 mask = mask.unsqueeze(1).unsqueeze(2).repeat(1, HEAD_NUM, 1, 1)
 
-model = DecoderLayer(hidden_dim=HIDDE_DIM, head_num=HEAD_NUM)
+model = Decoder()
 output = model(x, mask)
 print("Output tensor shape: ", output.shape)
